@@ -1,0 +1,57 @@
+Shiny App to Predict Child's height 
+========================================================
+author: Xinzhu
+date: Aug 2, 2017
+width: 1920
+height: 1080
+
+What this app does?
+========================================================
+
+- This app predict son's height based on father's height.
+- It gives a confidential interval of the son's height. 
+- It shows where the predicted height lays in the total samples.
+
+Here is where you input father's height:
+========================================================
+
+![Input](input.png)
+
+The app will calculate son's height
+========================================================
+e.g. Let's say that father's height is **68**:
+```{r, echo=FALSE, fig.height = 3, fig.width = 6}
+library(UsingR)
+data(father.son)
+fit <- lm(sheight ~ fheight, data = father.son)
+fatherInput <- 68
+sonPred <- round(predict(fit, newdata=data.frame(fheight=fatherInput), interval="prediction"),1)
+```
+The app will give a prediction of son's height of **`r sonPred[1,1]`**, with confidential interval of **`r sonPred[1,2]`** and **`r sonPred[1,3]`**.
+
+The format of output is shown below:  
+![Output](output.png)
+
+The app also shows where the input and output lay in the total samples:
+========================================================
+```{r, echo=FALSE,fig.width=8,fig.height=4.5,dpi=300,out.width="1920px",out.height="1080px"}
+library(UsingR)
+data(father.son)
+library(ggplot2)
+fit <- lm(sheight ~ fheight, data = father.son)
+fatherInput <- 68
+sonPred <- round(predict(fit, newdata=data.frame(fheight=fatherInput), interval="prediction"),1)
+
+fathers <- father.son$fheight
+ribbon_x <- data.frame(fheight=seq(min(fathers), max(fathers), length=1000))
+ribbon_y <- data.frame(predict(fit, newdata=ribbon_x, interval = "prediction"))
+ribbon_dat <- cbind(ribbon_x, ribbon_y)
+g <- ggplot(data = ribbon_dat, aes(x=fheight, y=fit)) + 
+     geom_ribbon(aes(ymin=ribbon_y$lwr, ymax=ribbon_y$upr), alpha=0.2) +
+     geom_line(color="blue", size=1.5) +
+     geom_point(data=father.son, aes(x=fheight, y=sheight), alpha=0.5) +
+     geom_point(aes(x=fatherInput, y=sonPred[1,1]), color="red", size=3) +
+     geom_point(aes(x=fatherInput, y=sonPred[1,2]), color="red", size=3) +
+     geom_point(aes(x=fatherInput, y=sonPred[1,3]), color="red", size=3) 
+g
+```
